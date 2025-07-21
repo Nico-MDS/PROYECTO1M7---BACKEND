@@ -1,3 +1,4 @@
+// controllers/userController.js
 const User = require('../models/userModel');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
@@ -11,18 +12,29 @@ const generateToken = (userId) => {
 
 // POST /api/user/register
 const registerUser = async (req, res) => {
-  const { name, email, password } = req.body;
-
-  if (!name || !email || !password) {
-    return res.status(400).json({ message: 'Todos los campos son obligatorios' });
-  }
-
   try {
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return res.status(400).json({ message: 'El usuario ya existe' });
+    const { name, email, password } = req.body;
+
+    console.log("📩 Datos recibidos en el registro:", req.body); // Log para depuración
+
+    // Validar campos obligatorios
+    if (!name || !email || !password) {
+      return res.status(400).json({ message: 'Todos los campos son obligatorios' });
     }
 
+    // Validar formato de email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ message: 'Email no válido' });
+    }
+
+    // Verificar si ya existe un usuario con ese correo
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ message: 'El usuario ya existe con ese correo' });
+    }
+
+    // Crear el nuevo usuario
     const newUser = await User.create({ name, email, password });
 
     return res.status(201).json({
@@ -35,7 +47,8 @@ const registerUser = async (req, res) => {
       token: generateToken(newUser._id)
     });
   } catch (error) {
-    return res.status(500).json({ message: 'Error al registrar usuario', error: error.message });
+    console.error('❌ Error al registrar usuario:', error);
+    return res.status(500).json({ message: 'Error interno al registrar usuario', error: error.message });
   }
 };
 
@@ -68,13 +81,13 @@ const loginUser = async (req, res) => {
   }
 };
 
-// GET /api/user/profile (protegido)
+// GET /api/user/profile
 const getProfile = async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select('-password');
     if (!user) return res.status(404).json({ message: 'Usuario no encontrado' });
 
-    return res.status(200).json(user); // ✅ esto es lo que espera el frontend
+    return res.status(200).json(user);
   } catch (error) {
     return res.status(500).json({ message: 'Error al recuperar perfil', error: error.message });
   }
@@ -90,7 +103,7 @@ const updateUser = async (req, res) => {
 
     if (name) user.name = name;
     if (email) user.email = email;
-    if (password) user.password = password; // se hashea automáticamente desde el modelo
+    if (password) user.password = password;
 
     const updatedUser = await user.save();
 
