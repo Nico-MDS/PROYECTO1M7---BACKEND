@@ -112,7 +112,16 @@ Se muestra una pantalla de confirmación:
 ## 🚀 Cómo ejecutar en local
 
 ### Backend
-```bash
-cd Proyecto-backend
-npm install
-npm run dev
+- cd Proyecto-backend
+- npm install
+- npm run dev
+
+---
+
+## Nota: crear un archivo .env en el backend con las siguientes variables:
+
+- MONGO_URI=tu_uri_de_mongo
+- JWT_SECRET=una_clave_segura
+- STRIPE_KEY=tu_clave_secreta_de_stripe
+- STRIPE_SUCCESS_URL=http://localhost:5173/success
+- STRIPE_CANCEL_URL=http://localhost:5173/cart
